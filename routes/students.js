@@ -3,12 +3,13 @@ import prisma from "../prisma/client.js";
 
 const router = express.Router();
 
-// 1. جلب كل الطلاب مع مدفوعاتهم (GET)
+// 1. جلب كل الطلاب مع مدفوعاتهم وحضورهم (GET)
 router.get("/", async (req, res) => {
   try {
     const students = await prisma.student.findMany({
       include: { 
-        payments: true // أساسي عشان الـ Revenue والـ Chart
+        payments: true,    // عشان الـ Revenue والـ Chart
+        attendances: true  // 👈 ضروري جداً عشان عداد الحضور يشتغل
       },
       orderBy: {
         createdAt: 'desc' // الأحدث يظهر أولاً
@@ -32,9 +33,13 @@ router.post("/", async (req, res) => {
     const newStudent = await prisma.student.create({
       data: { 
         name, 
-        level: String(level) // التأكد من نوع البيانات
+        level: String(level) 
       },
-      include: { payments: true } // نرجعه مع مصفوفة دفع فاضية عشان الـ Frontend ما يضربش
+      // نرجعه مع مصفوفات فاضية عشان الـ Frontend ما يطلعش أخطاء
+      include: { 
+        payments: true,
+        attendances: true 
+      } 
     });
     res.json(newStudent);
   } catch (err) {
@@ -55,7 +60,10 @@ router.put("/:id", async (req, res) => {
         name, 
         level: String(level) 
       },
-      include: { payments: true }
+      include: { 
+        payments: true,
+        attendances: true 
+      }
     });
     res.json(updated);
   } catch (err) {

@@ -13,7 +13,7 @@ model User {
   name      String
   email     String   @unique
   password  String
-  role      String   @default("student") 
+  role      String   @default("student") // admin or student
   createdAt DateTime @default(now())
 }
 
@@ -30,25 +30,31 @@ model Student {
   name        String
   level       String
   classId     Int?
-  class       Class?       @relation(fields: [classId], references: [id])
+  class       Class?       @relation(fields: [classId], references: [id], onDelete: SetNull) // لو مسحت الفصل، الطالب يفضل موجود
   attendances Attendance[]
   payments    Payment[]
   createdAt   DateTime     @default(now())
+
+  @@index([name]) // تسريع البحث بالاسم
 }
 
 // 4. جدول الحضور والغياب
 model Attendance {
   id        Int      @id @default(autoincrement())
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade) // 👈 مسح تلقائي عند مسح الطالب
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int
-  date      DateTime @default(now())
+  date      DateTime @default(now()) @db.Date // تخزين التاريخ فقط بدون الوقت لسهولة المقارنة
+
+  @@index([studentId])
 }
 
-// 5. جدول المدفوعات (عشان الـ Revenue والـ Chart)
+// 5. جدول المدفوعات
 model Payment {
   id        Int      @id @default(autoincrement())
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade) // 👈 مسح تلقائي عند مسح الطالب
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId Int
   amount    Float
   date      DateTime @default(now())
+
+  @@index([studentId])
 }

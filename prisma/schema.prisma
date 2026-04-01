@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. جدول المستخدمين (للدخول والتسجيل)
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("student") 
+  createdAt DateTime @default(now())
+}
+
+// 2. جدول الحلقات أو الفصول
+model Class {
+  id       Int       @id @default(autoincrement())
+  name     String
+  students Student[]
+}
+
+// 3. جدول الطلاب (الأساسي)
+model Student {
+  id          Int          @id @default(autoincrement())
+  name        String
+  level       String
+  classId     Int?
+  class       Class?       @relation(fields: [classId], references: [id])
+  attendances Attendance[]
+  payments    Payment[]
+  createdAt   DateTime     @default(now())
+}
+
+// 4. جدول الحضور والغياب
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade) // 👈 مسح تلقائي عند مسح الطالب
+  studentId Int
+  date      DateTime @default(now())
+}
+
+// 5. جدول المدفوعات (عشان الـ Revenue والـ Chart)
+model Payment {
+  id        Int      @id @default(autoincrement())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade) // 👈 مسح تلقائي عند مسح الطالب
+  studentId Int
+  amount    Float
+  date      DateTime @default(now())
+}
